@@ -1,6 +1,12 @@
 import AppKit
 import WebKit
 
+/// A site's own "copy this text?" confirmation. The user already pressed that site's copy
+/// button, so Vane accepts this one without a sheet. Every other confirm box still appears.
+func isSiteCopyConfirmation(_ message: String) -> Bool {
+    message.hasPrefix("Are you sure you want to copy the following text")
+}
+
 /// What a tab remembers about page dialogs. Sheets block their window, so a page that
 /// keeps calling alert() could otherwise lock the user out of it.
 ///
@@ -130,6 +136,7 @@ extension Tab {
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
                  initiatedByFrame frame: WKFrameInfo,
                  completionHandler: @escaping @MainActor (Bool) -> Void) {
+        if isSiteCopyConfirmation(message) { completionHandler(true); return }
         PageDialogs.present(message: message, frame: frame, tab: self, web: webView,
                             cancellable: true, completion: completionHandler)
     }
